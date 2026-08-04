@@ -1,4 +1,9 @@
-<!-- Casa de Praia — Aniversário do Lucas -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Casa de Praia — Aniversário do Lucas</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,500&family=Jost:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
 
@@ -12,6 +17,8 @@
     --night: #0a1f26;
   }
 
+  html, body{ margin: 0; padding: 0; }
+
   * { box-sizing: border-box; }
 
   .praia-wrap{
@@ -22,7 +29,6 @@
     padding: 0;
     position: relative;
     overflow-x: hidden;
-    border-radius: 18px;
   }
 
   /* ---------- HERO ---------- */
@@ -405,11 +411,33 @@
     padding: 0 24px 28px;
   }
 
-  @media (max-width: 420px){
-    .hero{ min-height: 480px; }
-    .gallery-grid{ grid-template-rows: 105px 105px 105px; }
+  @media (max-width: 600px){
+    .hero{ min-height: 500px; padding: 28px 22px 36px; }
+    .headline{ font-size: clamp(38px, 11vw, 50px); }
+    .call-text{ font-size: 16.5px; }
+    .chip{ font-size: 12.5px; padding: 9px 15px; }
+
+    .gallery-section{ padding: 34px 18px 8px; }
+    .gallery-grid{ grid-template-rows: 118px 118px 118px; gap: 6px; }
+
+    .info-section{ padding: 28px 18px 8px; gap: 14px; }
+    .info-card{ padding: 20px 18px; }
+    .info-card-title{ font-size: 18px; }
+    .items-list li{ font-size: 16.5px; }
+    .location-line{ font-size: 16px; }
+    .day-pill{ min-width: 58px; height: 58px; font-size: 13px; }
+
+    .rsvp-section{ padding: 32px 18px 8px; }
+    .rsvp-card{ padding: 26px 20px; }
+    .rsvp-title{ font-size: 20px; }
+    .name-input{ font-size: 16px; padding: 14px 16px; }
+    .confirm-btn{ font-size: 16px; padding: 15px; }
+
+    .manifest{ padding: 22px 18px 40px; }
   }
 </style>
+</head>
+<body>
 
 <div class="praia-wrap">
 
@@ -467,7 +495,7 @@
   <div class="rsvp-section">
     <div class="rsvp-card">
       <h2 class="rsvp-title">Confirme sua presença</h2>
-      <p class="rsvp-sub">Seu nome entra na lista de convidados</p>
+      <p class="rsvp-sub">Manda seu nome direto pro Lucas no WhatsApp</p>
 
       <label class="field-label" for="guestName">Nome completo</label>
       <input id="guestName" class="name-input" type="text" placeholder="Ex: João Silva" maxlength="60" />
@@ -482,7 +510,6 @@
       <span class="manifest-title">Lista de convidados</span>
       <span class="manifest-count" id="guestCount">36 confirmados</span>
     </div>
-    <ul class="manifest-list" id="guestList"></ul>
   </div>
 
   <p class="footer-note">CASA DE PRAIA • ANIVERSÁRIO DO LUCAS</p>
@@ -490,40 +517,12 @@
 
 <script>
 (function(){
-  const STORAGE_KEY = 'casa-de-praia-lucas-guests';
-  const BASE_CONFIRMED = 36;
+  const WHATSAPP_NUMBER = 'COLOQUE_O_NUMERO_AQUI'; // ex: 5548999998888 (DDI+DDD+numero, só números)
   const input = document.getElementById('guestName');
   const btn = document.getElementById('confirmBtn');
   const statusMsg = document.getElementById('statusMsg');
-  const listEl = document.getElementById('guestList');
-  const countEl = document.getElementById('guestCount');
 
-  async function loadGuests(){
-    try{
-      const res = await window.storage.get(STORAGE_KEY, true);
-      return res && res.value ? JSON.parse(res.value) : [];
-    }catch(e){
-      return [];
-    }
-  }
-
-  function render(guests){
-    listEl.innerHTML = '';
-    guests.forEach((name, i) => {
-      const li = document.createElement('li');
-      li.innerHTML = `<span class="row-num">${String(i+1).padStart(2,'0')}</span><span>${name}</span>`;
-      listEl.appendChild(li);
-    });
-    const total = guests.length + BASE_CONFIRMED;
-    countEl.textContent = `${total} confirmado${total === 1 ? '' : 's'}`;
-  }
-
-  async function init(){
-    const guests = await loadGuests();
-    render(guests);
-  }
-
-  async function addGuest(){
+  function confirmPresence(){
     const name = input.value.trim();
     if(!name){
       statusMsg.textContent = 'Digite seu nome antes de confirmar.';
@@ -531,33 +530,20 @@
       return;
     }
 
-    btn.disabled = true;
     statusMsg.classList.remove('error');
-    statusMsg.textContent = 'Confirmando...';
+    statusMsg.textContent = 'Abrindo o WhatsApp...';
 
-    try{
-      const guests = await loadGuests();
-      const alreadyIn = guests.some(g => g.toLowerCase() === name.toLowerCase());
-      if(alreadyIn){
-        statusMsg.textContent = 'Você já está na lista!';
-      } else {
-        guests.push(name);
-        await window.storage.set(STORAGE_KEY, JSON.stringify(guests), true);
-        render(guests);
-        statusMsg.textContent = 'Presença confirmada!';
-      }
-      input.value = '';
-    }catch(e){
-      statusMsg.textContent = 'Não foi possível salvar agora. Tente de novo.';
-      statusMsg.classList.add('error');
-    }finally{
-      btn.disabled = false;
-    }
+    const message = `Oi Lucas! Confirmando minha presença na Casa de Praia: ${name} 🏖️`;
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+
+    input.value = '';
   }
 
-  btn.addEventListener('click', addGuest);
-  input.addEventListener('keydown', (e) => { if(e.key === 'Enter') addGuest(); });
-
-  init();
+  btn.addEventListener('click', confirmPresence);
+  input.addEventListener('keydown', (e) => { if(e.key === 'Enter') confirmPresence(); });
 })();
 </script>
+
+</body>
+</html>
